@@ -1,0 +1,72 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+env:
+  MICROPYTHON_URL: "https://github.com/micropython/micropython/archive/refs/tags/v1.12.tar.gz"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pipenv'
+      - name: Install pipenv
+        run: pip install pipenv
+      - name: Install dependencies
+        run: pipenv sync --dev
+      - name: Setup variables
+        id: mpy-vars
+        run: |
+          URL_HASH=`echo -n "${MICROPYTHON_URL}" | sha1sum | cut -d " " -f 1`
+          echo "URL_HASH=${URL_HASH}"
+          echo "URL_HASH=${URL_HASH}" >> $GITHUB_OUTPUT
+          BASE_FILE_NAME=`echo "${MICROPYTHON_URL}" | rev | cut -d "/" -f 1 | rev | sed -e "s/^v//"`
+          echo "BASE_FILE_NAME=${BASE_FILE_NAME}"
+          echo "BASE_FILE_NAME=${BASE_FILE_NAME}" >> $GITHUB_OUTPUT
+          FILE_NAME="micropython-${BASE_FILE_NAME}"
+          echo "FILE_NAME=${FILE_NAME}"
+          echo "FILE_NAME=${FILE_NAME}" >> $GITHUB_OUTPUT
+          DIR_NAME=`echo $FILE_NAME | rev | cut -d "." -f 3- | rev`
+          echo "DIR_NAME=${DIR_NAME}"
+          echo "DIR_NAME=${DIR_NAME}" >> $GITHUB_OUTPUT
+          USER_BIN="${HOME}/bin"
+          echo "USER_BIN=${USER_BIN}"
+          echo "USER_BIN=${USER_BIN}" >> $GITHUB_OUTPUT
+      - name: Restore mpy-cross
+        id: cache-mpy-cross
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.mpy-vars.outputs.USER_BIN }}/mpy-cross
+          key: ${{ runner.os }}-mpy-cross-${{ steps.mpy-vars.outputs.URL_HASH }}
+      - name: Compile mpy-cross
+        if: steps.cache-mpy-cross.outputs.cache-hit != 'true'
+        working-directory: ${{ runner.temp }}
+        run: |
+          curl -L "${MICROPYTHON_URL}" -o "${{ steps.mpy-vars.outputs.FILE_NAME }}"
+          tar -xf "${{ steps.mpy-vars.outputs.FILE_NAME }}"
+          cd "${{ steps.mpy-vars.outputs.DIR_NAME }}/mpy-cross" && make
+          mkdir "${{ steps.mpy-vars.outputs.USER_BIN }}"
+          cp mpy-cross "${{ steps.mpy-vars.outputs.USER_BIN }}"
+          stat "${{ steps.mpy-vars.outputs.USER_BIN }}/mpy-cross"
+      - name: Add path
+        run: echo "${{ steps.mpy-vars.outputs.USER_BIN }}" >> $GITHUB_PATH
+      - name: Build mpy
+        run: pipenv run build
+      - name: Create package
+        run: pipenv run package
+      - name: Rename package
+        run: mv "./dist/package.zip" "./dist/m5-wattmeter-${{ github.ref_name }}.zip"
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "./dist/m5-wattmeter-${{ github.ref_name }}.zip"

@@ -1,0 +1,4 @@
+[scripts]
+test = 'bash -c "export PYTHONPATH=\"./wattmeter:$PYTHONPATH\"; python -m unittest discover -v -s tests"'
+build = 'bash -c "./scripts/concat.sh && ./scripts/mpy.sh"'
+package = './scripts/package.sh'

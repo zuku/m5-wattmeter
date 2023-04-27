@@ -1,0 +1,10 @@
+{
+    "channel": "21",
+    "pan_id": "8888",
+    "mac_addr": "001D129012345678",
+    "factor": 1,
+    "unit": 0.1,
+    "significant_figures": 6,
+    "display_flip": true,
+    "face_id": 1
+}

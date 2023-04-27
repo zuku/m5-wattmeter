@@ -1,0 +1,40 @@
+{
+    "network": {
+        "wifi": {
+            "ssid": "WiFi-SSID",
+            "password": "WiFi-Password"
+        },
+        "ntp": {
+            "server": "ntp.example.com",
+            "timezone": -12
+        }
+    },
+    "b_route": {
+        "id": "00000000000000000000000000000000",
+        "password": "XXXXXXXXXXXX"
+    },
+    "wattmeter": {
+        "max": {
+            "watt": 3000
+        },
+        "warning": {
+            "watt": 2500,
+            "beep": true
+        },
+        "caution": {
+            "watt": 2000,
+            "beep": true
+        },
+        "update_interval": 30,
+        "beep_volume": 5,
+        "auto_reboot": false,
+        "sync_cache": true
+    },
+    "display": {
+        "brightness": 50,
+        "sleep": {
+            "start": "23:00",
+            "end": "6:00"
+        }
+    }
+}

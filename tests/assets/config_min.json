@@ -1,0 +1,11 @@
+{
+    "b_route": {
+        "id": "00000000000000000000000000000000",
+        "password": "XXXXXXXXXXXX"
+    },
+    "wattmeter": {
+        "max": {
+            "watt": 3000
+        }
+    }
+}
