@@ -167,9 +167,14 @@ class M5Wattmeter:
             # エラーの記録だけ行いタスクループの停止(例外の送出)はしない
             self.logging.e(e)
 
-    def _prepareClient(self):
+    def _prepareClient(self, force_scan=False):
         """
         Wi-SUNクライアントの使用準備を行う
+
+        Parameters
+        ----------
+        force_scan : bool
+            SKSCANを強制的に実行する場合はTrue
 
         Raises
         ------
@@ -199,8 +204,11 @@ class M5Wattmeter:
         self.client.execSetRbId(self.config.config.b_route.id)
 
         cache = self.config.cache
-        if None in (cache.channel, cache.pan_id, cache.mac_addr):
-            self.logging.info("cache miss: scan results")
+        if force_scan or None in (cache.channel, cache.pan_id, cache.mac_addr):
+            if force_scan:
+                self.logging.info("force scan")
+            else:
+                self.logging.info("cache miss: scan results")
             self.vlcd.showProgress(11 / total_steps, "Scanning...")
             self.utime.sleep(self.SCAN_PRE_WAIT_SEC)
             retry_count = self.SCAN_RETRY
@@ -245,7 +253,7 @@ class M5Wattmeter:
                     retry_count -= 1
                     self.logging.info("BP35A1 join retry: " + str(retry_count))
                     continue
-                raise e
+                raise JoinError(str(e))
         self.vlcd.showProgress(17 / total_steps, "Connected")
 
         self.logging.info("BP35A1 get meter status")
@@ -332,7 +340,13 @@ class M5Wattmeter:
         self.logging.info("<<< _prepareNtp()")
 
         self.logging.info(">>> _prepareClient()")
-        self._prepareClient()
+        try:
+            self._prepareClient()
+        except JoinError as e:
+            self.logging.exception(e)
+            # SKJOIN失敗時はSKSCAN強制実行ありで1回だけリトライする
+            self.logging.info("retry _prepareClient(True)")
+            self._prepareClient(True)
         self.logging.info("<<< _prepareClient()")
 
         self.logging.info(">>> _prepareTask()")
@@ -824,6 +838,12 @@ class NetworkError(Exception):
 class WiSUNError(Exception):
     """
     Wi-SUN関連の例外
+    """
+    pass
+
+class JoinError(Exception):
+    """
+    SKJOIN失敗時の例外
     """
     pass
 
