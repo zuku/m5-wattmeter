@@ -48,7 +48,7 @@ class WMConfig:
             },
             "warning": None,
             "caution": None,
-            "update_interval": 15,
+            "update_interval": 30,
             "beep_volume": 3,
             "auto_reboot": True,
             "sync_cache": False,

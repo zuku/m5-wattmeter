@@ -25,7 +25,7 @@
             "watt": 2000,
             "beep": true
         },
-        "update_interval": 30,
+        "update_interval": 15,
         "beep_volume": 5,
         "auto_reboot": false,
         "sync_cache": true
